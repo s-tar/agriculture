@@ -67,7 +67,6 @@ On startup the app container automatically runs `alembic upgrade head` before la
 ### 3. Seed the database
 
 ```bash
-# inside the container
 docker compose exec app  python seed.py \
 --fields 1000 \
 --spawn-point 49.03894602802728 28.1052090853511 \
