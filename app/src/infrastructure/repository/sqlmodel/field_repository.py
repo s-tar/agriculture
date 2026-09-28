@@ -165,7 +165,7 @@ class SqlModelFieldRepository(FieldRepository):
         max_area: Decimal | None = None,
     ) -> int:
         statement = self._apply_filters(
-            statement=select(func.count()),
+            statement=select(func.count()).select_from(FieldModel),
             crop_name=crop_name,
             owner_name=owner_name,
             min_area=min_area,
