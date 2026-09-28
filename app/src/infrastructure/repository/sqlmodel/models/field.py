@@ -8,6 +8,7 @@ from geoalchemy2 import Geometry, WKBElement
 from sqlalchemy import Index, func
 from sqlalchemy.orm import Mapped
 from sqlmodel import Column, Relationship, SQLModel
+from src.config.settings import get_settings
 
 if TYPE_CHECKING:
     from src.infrastructure.repository.sqlmodel.models.crop import Crop
@@ -28,7 +29,7 @@ class Field(SQLModel, table=True):
 
     area_ha: Decimal = sqlmodel.Field(index=True)
     geometry: WKBElement = sqlmodel.Field(
-        sa_column=Column(Geometry("POLYGON", srid=4326))
+        sa_column=Column(Geometry("POLYGON", srid=get_settings().SRID))
     )
     created_at: datetime = sqlmodel.Field(
         default=func.now(),
