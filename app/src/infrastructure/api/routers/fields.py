@@ -133,18 +133,18 @@ async def create_field(
     handler: Annotated[CreateFieldHandler, Depends(get_create_field_handler)],
     data: FieldCreateData,
 ):
-    command = CreateFieldCommand(
-        name=data.name,
-        owner_name=data.owner,
-        crop_name=data.crop,
-        geometry=Geometry(
-            type=DomainGeometryType(data.geometry.type.value),
-            coordinates=[
-                Point(lat=lat, lon=lon) for lat, lon in data.geometry.coordinates[0]
-            ],
-        ),
-    )
     try:
+        command = CreateFieldCommand(
+            name=data.name,
+            owner_name=data.owner,
+            crop_name=data.crop,
+            geometry=Geometry(
+                type=DomainGeometryType(data.geometry.type.value),
+                coordinates=[
+                    Point(lat=lat, lon=lon) for lat, lon in data.geometry.coordinates[0]
+                ],
+            ),
+        )
         field = await handler.handle(command)
     except InvalidCropNameError as e:
         raise ValidationError(field_name="crop", message=str(e)) from e
