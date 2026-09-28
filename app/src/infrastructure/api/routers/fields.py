@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from src.application.use_cases.commands.create_field import (
     CreateFieldCommand,
     CreateFieldHandler,
@@ -51,7 +51,7 @@ async def list_fields(
     owner: str | None = None,
     min_area: Decimal | None = None,
     max_area: Decimal | None = None,
-    limit: int = 10,
+    limit: Annotated[int, Query(le=1000)] = 10,
     offset: int = 0,
 ):
     fields, total = await handler.handle(
@@ -81,8 +81,8 @@ async def list_fields(
 @router.get("/find-by-point", response_model=FindByPointResponse)
 async def get_fields_by_point(
     handler: Annotated[GetFieldByPointHandler, Depends(get_get_field_by_point_handler)],
-    lat: float,
-    lon: float,
+    lat: Annotated[float, Query(ge=-90, le=90)],
+    lon: Annotated[float, Query(ge=-180, le=180)],
 ):
     fields, execution_time = await handler.handle(lat, lon)
     return FindByPointResponse(
