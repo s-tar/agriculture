@@ -75,7 +75,7 @@ def upgrade() -> None:
     op.create_index(
         "idx_field_geometry",
         "field",
-        ["geom"],
+        ["geometry"],
         postgresql_using="gist",
         if_not_exists=True,
     )
