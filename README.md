@@ -25,7 +25,7 @@ agriculture/
 ├── .env.example
 └── app/
     ├── Dockerfile
-    ├── main.py                    # FastAPI entry point
+    ├── main.py                    # Application entry point
     ├── requirements.txt
     ├── alembic/                   # migrations
     ├── seed.py                    # CLI seeder (configurable counts)
@@ -46,12 +46,13 @@ agriculture/
             ├── api/
             │   ├── routers/       # FastAPI route handlers
             │   ├── schemas/       # Pydantic request/response models
+            │   ├── app.py         # FastAPI entry point
             │   ├── dependancies.py
             │   └── exceptions.py
             └── repository/
                 └── sqlmodel/
                     ├── models/    # ORM models (Crop, Owner, Field)
-                    ├── convertors.py
+                    ├── converters.py
                     ├── field_repository.py
                     ├── unit_of_work.py
                     └── database.py

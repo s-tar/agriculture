@@ -15,7 +15,7 @@ from src.domain.value_objects.geometry import (
     GeometryDetailed,
 )
 
-from .convertors import field_model_to_entity, geometry_to_wkb
+from .converters import field_model_to_entity, geometry_to_wkb
 from .models.crop import Crop
 from .models.crop import Crop as CropModel
 from .models.field import Field as FieldModel
