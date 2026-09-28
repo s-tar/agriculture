@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import TypeAlias
 from uuid import UUID
 
 from geoalchemy2 import Geography, functions
@@ -15,11 +16,14 @@ from src.domain.value_objects.geometry import (
 )
 
 from .convertors import field_model_to_entity, geometry_to_wkb
+from .models.crop import Crop
 from .models.crop import Crop as CropModel
 from .models.field import Field as FieldModel
+from .models.owner import Owner
 from .models.owner import Owner as OwnerModel
 
-FieldIdType: type[UUID] = UUID
+FieldIdType: TypeAlias = UUID
+
 SQUARE_METES_TO_HECTARE = 0.0001
 
 
@@ -49,10 +53,10 @@ class SqlModelFieldRepository(FieldRepository):
             statement = statement.where(FieldModel.area_ha < max_area)
 
         if crop_name:
-            statement = statement.join(CropModel).where(CropModel.name == crop_name)
+            statement = statement.join(FieldModel.crop).where(Crop.name == crop_name)
 
         if owner_name:
-            statement = statement.join(OwnerModel).where(OwnerModel.name == owner_name)
+            statement = statement.join(FieldModel.owner).where(Owner.name == owner_name)
 
         return statement
 
@@ -84,7 +88,6 @@ class SqlModelFieldRepository(FieldRepository):
         self,
         field_id: str,
     ) -> Field | None:
-        field_id = await self._parse_id(field_id)
         field = (
             await self.session.exec(
                 select(FieldModel)
@@ -129,7 +132,7 @@ class SqlModelFieldRepository(FieldRepository):
             for field, distance in result
         ]
 
-    async def list(
+    async def get_many(
         self,
         crop_name: str | None = None,
         owner_name: str | None = None,
@@ -137,7 +140,7 @@ class SqlModelFieldRepository(FieldRepository):
         max_area: Decimal | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> list[Field] | []:
+    ) -> list[Field]:
         statement = self._apply_filters(
             statement=select(FieldModel),
             crop_name=crop_name,
@@ -162,7 +165,7 @@ class SqlModelFieldRepository(FieldRepository):
         max_area: Decimal | None = None,
     ) -> int:
         statement = self._apply_filters(
-            statement=select(func.count(FieldModel.id)),
+            statement=select(func.count()),
             crop_name=crop_name,
             owner_name=owner_name,
             min_area=min_area,
@@ -196,19 +199,21 @@ class SqlModelFieldRepository(FieldRepository):
         name: str,
         owner_name: str,
         crop_name: str,
-        area_ha: Decimal,
         geometry: Geometry,
     ) -> Field:
         crop = await self._get_or_create_crop(crop_name)
         owner = await self._get_or_create_owner(owner_name)
+        geometry_wkb = geometry_to_wkb(geometry, srid=self.srid)
         field = FieldModel(
             name=name,
             owner_id=owner.id,
             crop_id=crop.id,
-            geometry=geometry_to_wkb(geometry, srid=self.srid),
-            area_ha=area_ha,
+            geometry=geometry_wkb,
+            area_ha=functions.ST_Area(
+                cast(geometry_wkb, Geography(srid=self.srid)),
+            )
+            * SQUARE_METES_TO_HECTARE,  # type: ignore
         )
-        print("=====================>", field)
         self.session.add(field)
         await self.session.flush()
         await self.session.refresh(field)

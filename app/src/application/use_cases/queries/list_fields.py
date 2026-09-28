@@ -19,7 +19,7 @@ class ListFieldsHandler:
         offset: int = 0,
     ) -> tuple[list[FieldDTO], TotalDTO]:
 
-        fields = await self.uow.fields.list(
+        fields = await self.uow.fields.get_many(
             crop_name=crop_name,
             owner_name=owner_name,
             min_area=min_area,

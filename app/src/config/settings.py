@@ -21,4 +21,4 @@ class Settings(BaseSettings):
     AREA_MIN_SIZE: float = 0.1
 
 
-settings = Settings()
+settings = Settings()  # type: ignore

@@ -19,6 +19,7 @@ from src.domain.exceptions import (
     InvalidOwnerNameError,
 )
 from src.domain.value_objects.geometry import Geometry, Point
+from src.domain.value_objects.geometry import GeometryType as DomainGeometryType
 from src.infrastructure.api.dependancies import (
     get_create_field_handler,
     get_get_field_by_point_handler,
@@ -135,7 +136,7 @@ async def create_filed(
         owner_name=data.owner,
         crop_name=data.crop,
         geometry=Geometry(
-            type=data.geometry.type,
+            type=DomainGeometryType(data.geometry.type.value),
             coordinates=[
                 Point(lat=lat, lon=lon) for lat, lon in data.geometry.coordinates[0]
             ],

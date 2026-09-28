@@ -12,16 +12,15 @@ class FieldRepository(Protocol):
         name: str,
         owner_name: str,
         crop_name: str,
-        area_ha: Decimal,
         geometry: Geometry,
     ) -> Field: ...
 
     async def get(
         self,
         field_id: str,
-    ) -> Field: ...
+    ) -> Field | None: ...
 
-    async def list(
+    async def get_many(
         self,
         crop_name: str | None = None,
         owner_name: str | None = None,

@@ -48,7 +48,6 @@ class CreateFieldHandler:
             name=command.name,
             owner_name=command.owner_name,
             crop_name=command.crop_name,
-            area_ha=detailed_geometry.area_ha,
             geometry=command.geometry,
         )
 

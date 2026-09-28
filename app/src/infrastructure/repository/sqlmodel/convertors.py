@@ -2,6 +2,7 @@ from geoalchemy2 import WKBElement
 from geoalchemy2.shape import from_shape, to_shape
 from shapely import get_coordinates
 from shapely.geometry import shape
+from shapely.geometry.base import BaseGeometry
 from src.domain.entities.field import Field
 from src.domain.value_objects.field_id import FieldId
 from src.domain.value_objects.geometry import Geometry, GeometryType, Point
@@ -29,21 +30,16 @@ def field_model_to_entity(field: FieldModel) -> Field:
     )
 
 
-def geometry_to_wkb(geometry: Geometry, srid: int) -> WKBElement:
-    print(
+def geometry_to_shape(geometry: Geometry) -> BaseGeometry:
+    return shape(
         {
             "type": str(geometry.type),
-            "coordinates": [(point.lat, point.lon) for point in geometry.coordinates],
+            "coordinates": [
+                [(point.lat, point.lon) for point in geometry.coordinates],
+            ],
         }
     )
-    return from_shape(
-        shape(
-            {
-                "type": str(geometry.type),
-                "coordinates": [
-                    [(point.lat, point.lon) for point in geometry.coordinates],
-                ],
-            }
-        ),
-        srid=srid,
-    )
+
+
+def geometry_to_wkb(geometry: Geometry, srid: int) -> WKBElement:
+    return from_shape(geometry_to_shape(geometry), srid=srid)

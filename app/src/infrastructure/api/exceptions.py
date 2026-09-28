@@ -1,9 +1,11 @@
+from typing import Any
+
 from fastapi.exceptions import RequestValidationError
 from pydantic_core import ErrorDetails
 
 
 class ValidationError(RequestValidationError):
-    def __init__(self, field_name: str, field_value: any, message: str):
+    def __init__(self, field_name: str, field_value: Any, message: str):
         super().__init__(
             [
                 ErrorDetails(

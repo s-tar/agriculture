@@ -1,11 +1,12 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
 
 import pydantic
 from pydantic import AfterValidator, BaseModel
 
-RoundedFloat = Annotated[float, AfterValidator(lambda v: round(v, 1))]
+RoundedDecimal = Annotated[Decimal, AfterValidator(lambda v: round(v, 1))]
 
 
 class GeometryType(StrEnum):
@@ -25,19 +26,19 @@ class GeometrySchema(BaseModel):
 class ListFieldResponse(BaseModel):
     id: str
     name: str
-    area_ha: RoundedFloat
+    area_ha: RoundedDecimal
     crop: str
     owner: str
 
 
 class FindByPointFieldResponse(ListFieldResponse):
-    distance_to_center_m: RoundedFloat
+    distance_to_center_m: RoundedDecimal
 
 
 class FindByPointResponse(BaseModel):
     query_point: GeoPoint
     fields: list[FindByPointFieldResponse]
-    query_time_ms: RoundedFloat
+    query_time_ms: RoundedDecimal
 
 
 class CreateFieldResponse(BaseModel):
@@ -47,7 +48,7 @@ class CreateFieldResponse(BaseModel):
 class FieldResponse(BaseModel):
     id: str
     name: str
-    area_ha: RoundedFloat
+    area_ha: RoundedDecimal
     geometry: GeometrySchema
     crop: str
     owner: str

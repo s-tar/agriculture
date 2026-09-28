@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class GeometryType(StrEnum):
-    polygon = "Polygon"
+    POLYGON = "Polygon"
 
 
 @dataclass
