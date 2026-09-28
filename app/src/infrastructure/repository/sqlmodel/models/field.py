@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from src.infrastructure.repository.sqlmodel.models.crop import Crop
     from src.infrastructure.repository.sqlmodel.models.owner import Owner
 
+settings = get_settings()
+
 
 class Field(SQLModel, table=True):
     class Config:
@@ -29,7 +31,7 @@ class Field(SQLModel, table=True):
 
     area_ha: Decimal = sqlmodel.Field(index=True)
     geometry: WKBElement = sqlmodel.Field(
-        sa_column=Column(Geometry("POLYGON", srid=get_settings().SRID))
+        sa_column=Column(Geometry("POLYGON", srid=settings.SRID))
     )
     created_at: datetime = sqlmodel.Field(
         default=func.now(),
