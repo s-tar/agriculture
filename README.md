@@ -12,6 +12,11 @@ REST API for managing agricultural fields with geospatial support. Each field is
 | Database | PostgreSQL 18 |
 | Migrations | Alembic |
 
+## Architecture
+
+The project follows **Clean Architecture** with **Domain-Driven Design (DDD)** principles. Dependencies point inward: infrastructure depends on application, application depends on domain; the domain has no external dependencies.
+
+
 ## Project structure
 
 ```
@@ -20,16 +25,36 @@ agriculture/
 ├── .env.example
 └── app/
     ├── Dockerfile
-    ├── main.py               # FastAPI entry point
+    ├── main.py                    # FastAPI entry point
     ├── requirements.txt
-    ├── alembic/              # migrations
-    ├── seed.py               # CLI seeder (SQLModel, configurable counts)
+    ├── alembic/                   # migrations
+    ├── seed.py                    # CLI seeder (configurable counts)
     └── src/
-        ├── core/             # config, async DB session
-        ├── models/           # Crop, Owner, Field (SQLModel)
-        ├── repositories/     # async repository layer
-        ├── routers/          # API route handlers
-        └── schemas/          # Pydantic request/response schemas
+        ├── config/                # Pydantic settings
+        ├── domain/
+        │   ├── entities/          # Field
+        │   ├── value_objects/     # Geometry, Point, FieldId, Distance
+        │   ├── repositories/      # FieldRepository protocol
+        │   └── exceptions.py
+        ├── application/
+        │   ├── dtos/              # FieldDTO, FieldIdDTO, …
+        │   ├── interfaces/        # UnitOfWork protocol
+        │   └── use_cases/
+        │       ├── commands/      # CreateFieldHandler
+        │       └── queries/       # ListFieldsHandler, GetFieldHandler, …
+        └── infrastructure/
+            ├── api/
+            │   ├── routers/       # FastAPI route handlers
+            │   ├── schemas/       # Pydantic request/response models
+            │   ├── dependancies.py
+            │   └── exceptions.py
+            └── repository/
+                └── sqlmodel/
+                    ├── models/    # ORM models (Crop, Owner, Field)
+                    ├── convertors.py
+                    ├── field_repository.py
+                    ├── unit_of_work.py
+                    └── database.py
 ```
 
 ## Running the project
