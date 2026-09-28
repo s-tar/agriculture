@@ -4,6 +4,7 @@ from shapely import get_coordinates
 from shapely.geometry import shape
 from shapely.geometry.base import BaseGeometry
 from src.domain.entities.field import Field
+from src.domain.exceptions import InvalidGeometryError
 from src.domain.value_objects.field_id import FieldId
 from src.domain.value_objects.geometry import Geometry, GeometryType, Point
 
@@ -31,14 +32,17 @@ def field_model_to_entity(field: FieldModel) -> Field:
 
 
 def geometry_to_shape(geometry: Geometry) -> BaseGeometry:
-    return shape(
-        {
-            "type": str(geometry.type),
-            "coordinates": [
-                [(point.lat, point.lon) for point in geometry.coordinates],
-            ],
-        }
-    )
+    try:
+        return shape(
+            {
+                "type": str(geometry.type),
+                "coordinates": [
+                    [(point.lon, point.lat) for point in geometry.coordinates],
+                ],
+            }
+        )
+    except ValueError as e:
+        raise InvalidGeometryError(str(e)) from e
 
 
 def geometry_to_wkb(geometry: Geometry, srid: int) -> WKBElement:
