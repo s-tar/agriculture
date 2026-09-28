@@ -1,16 +1,21 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
-
-from alembic import context
-from src.core.config import settings
-from src.models.crop import Crop  # noqa: F401 — registers table metadata
-from src.models.field import Field  # noqa: F401 — registers table metadata
-from src.models.owner import Owner  # noqa: F401 — registers table metadata
+from src.config.settings import settings
+from src.infrastructure.repository.sqlmodel.models.crop import (
+    Crop,  # noqa: F401 — registers table metadata
+)
+from src.infrastructure.repository.sqlmodel.models.field import (
+    Field,  # noqa: F401 — registers table metadata
+)
+from src.infrastructure.repository.sqlmodel.models.owner import (
+    Owner,  # noqa: F401 — registers table metadata
+)
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

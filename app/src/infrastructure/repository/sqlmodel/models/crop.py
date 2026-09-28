@@ -2,11 +2,10 @@ import uuid
 from typing import TYPE_CHECKING
 
 import sqlmodel
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
+from sqlmodel import Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from src.models.field import Field
+    from src.infrastructure.repository.sqlmodel.models.field import Field
 
 
 class Crop(SQLModel, table=True):

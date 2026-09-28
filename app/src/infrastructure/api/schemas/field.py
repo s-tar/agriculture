@@ -1,14 +1,9 @@
-import uuid
-import pydantic
-
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import AfterValidator
-from pydantic import BaseModel
-
-from src.models.field import Field
+import pydantic
+from pydantic import AfterValidator, BaseModel
 
 RoundedFloat = Annotated[float, AfterValidator(lambda v: round(v, 1))]
 
@@ -28,7 +23,7 @@ class GeometrySchema(BaseModel):
 
 
 class ListFieldResponse(BaseModel):
-    id: uuid.UUID
+    id: str
     name: str
     area_ha: RoundedFloat
     crop: str
@@ -45,8 +40,12 @@ class FindByPointResponse(BaseModel):
     query_time_ms: RoundedFloat
 
 
+class CreateFieldResponse(BaseModel):
+    id: str
+
+
 class FieldResponse(BaseModel):
-    id: uuid.UUID
+    id: str
     name: str
     area_ha: RoundedFloat
     geometry: GeometrySchema
@@ -62,11 +61,5 @@ class FieldCreateData(BaseModel):
     owner: str = pydantic.Field(min_length=1, max_length=250)
 
 
-class GeometryValidation(BaseModel):
-    is_valid: bool
-    area: float
-
-
 class FieldWithDistanceToPoint(BaseModel):
     distance_to_center_m: float
-    field: Field
