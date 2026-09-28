@@ -1,7 +1,3 @@
-from dataclasses import dataclass
-
-
-@dataclass
 class Identifier[T]:
     def __init__(self, value: T):
         self.value = value
