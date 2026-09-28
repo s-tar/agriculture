@@ -143,7 +143,7 @@ Returns all fields whose polygon contains the point, plus the distance in metres
   "name": "Поле №1",
   "geometry": {
     "type": "Polygon",
-    "coordinates": [[[30.5, 48.2], [30.6, 48.2], [30.6, 48.3], [30.5, 48.3], [30.5, 48.2]]]
+    "coordinates": [[[48.2, 30.5], [48.2, 30.6], [48.3, 30.6], [48.3, 30.5], [48.2, 30.5]]]
   },
   "crop": "Соняшник",
   "owner": "Коваленко А.С."
