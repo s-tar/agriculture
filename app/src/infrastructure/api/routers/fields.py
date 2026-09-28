@@ -129,7 +129,7 @@ async def get_field_by_id(
 
 
 @router.post("", response_model=CreateFieldResponse, status_code=201)
-async def create_filed(
+async def create_field(
     handler: Annotated[CreateFieldHandler, Depends(get_create_field_handler)],
     data: FieldCreateData,
 ):
