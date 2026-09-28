@@ -60,7 +60,3 @@ class FieldCreateData(BaseModel):
     geometry: GeometrySchema
     crop: str = pydantic.Field(min_length=1, max_length=250)
     owner: str = pydantic.Field(min_length=1, max_length=250)
-
-
-class FieldWithDistanceToPoint(BaseModel):
-    distance_to_center_m: float
