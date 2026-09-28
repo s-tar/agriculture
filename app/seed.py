@@ -4,14 +4,12 @@ import math
 import random
 
 from faker import Faker
-from geoalchemy2 import Geography, functions
-from sqlalchemy import func
-from sqlmodel import cast, select
 from src.config.settings import settings
-from src.infrastructure.repository.sqlmodel.database import async_session_maker
-from src.models.crop import Crop
-from src.models.field import Field
-from src.models.owner import Owner
+from src.domain.value_objects.geometry import Geometry, GeometryType, Point
+from src.infrastructure.repository.sqlmodel.database import (
+    get_session,
+)
+from src.infrastructure.repository.sqlmodel.unit_of_work import SqlModelUnitOfWork
 
 BATCH_SIZE = 500
 METERS_IN_DEGREE = 111_320.0
@@ -144,43 +142,6 @@ def generate_owner_name() -> str:
     return f"{fake.last_name()} {fake.first_name()[0]}.{fake.middle_name()[0]}."
 
 
-async def get_random_crop(session) -> Crop:
-    global CROP_MAP
-
-    crop_name = random.choice(CROPS)
-    crop = CROP_MAP.get(crop_name)
-    if not crop:
-        crop = (await session.exec(select(Crop).where(Crop.name == crop_name))).first()
-
-    if not crop:
-        crop = Crop(name=crop_name)
-        session.add(crop)
-        await session.flush()
-        await session.refresh(crop)
-
-    CROP_MAP[crop_name] = crop
-    return crop
-
-
-async def get_random_owner(session) -> Crop:
-    global OWNER_MAP
-    owner_name = generate_owner_name()
-    owner = OWNER_MAP.get(owner_name)
-    if not owner:
-        owner = (
-            await session.exec(select(Owner).where(Owner.name == owner_name))
-        ).first()
-
-    if not owner:
-        owner = Owner(name=owner_name)
-        session.add(owner)
-        await session.flush()
-        await session.refresh(owner)
-
-    OWNER_MAP[owner.name] = owner
-    return owner
-
-
 def get_point_on_distance(
     lon: float, lat: float, distance: float, angle: float
 ) -> tuple[float, float]:
@@ -191,9 +152,9 @@ def get_point_on_distance(
     return (point_lon - 180) % 360 - 180, point_lat
 
 
-def generate_polygon_wkt(
+def generate_geometry(
     target_area_ha: float, spawn_radius: float, spawn_point: tuple[float, float] | None
-) -> str:
+) -> Geometry:
     if spawn_point:
         spawn_lat, spawn_lon = spawn_point
     else:
@@ -219,7 +180,7 @@ def generate_polygon_wkt(
     )
 
     field_radius = math.sqrt(target_area_ha * 10_000 / math.pi)
-    polygon = []
+    coordinated = []
     for angle in angles:
         point_lon, point_lat = get_point_on_distance(
             lon=field_center_lon,
@@ -227,10 +188,12 @@ def generate_polygon_wkt(
             distance=field_radius,
             angle=angle,
         )
-        polygon.append(f"{point_lon:.8f} {point_lat:.8f}")
+        coordinated.append(Point(lon=point_lon, lat=point_lat))
 
-    polygon.append(polygon[0])
-    return f"POLYGON(({', '.join(polygon)}))"
+    return Geometry(
+        type=GeometryType.POLYGON,
+        coordinates=coordinated,
+    )
 
 
 async def seed_fields(
@@ -238,8 +201,9 @@ async def seed_fields(
     spawn_radius: float,
     spawn_point: tuple[float, float] | None,
 ) -> None:
-    async with async_session_maker() as session:
-        existed_field_amount = (await session.exec(select(func.count(Field.id)))).one()
+    async for session in get_session():
+        uow = SqlModelUnitOfWork(session=session, srid=settings.SRID)
+        existed_field_amount = await uow.fields.count()
         field_number = existed_field_amount + 1
         added_fields_count = 0
         for i in range(math.ceil(amount / BATCH_SIZE)):
@@ -247,31 +211,22 @@ async def seed_fields(
                 if BATCH_SIZE * i + j >= amount:
                     break
 
-                crop = await get_random_crop(session)
-                owner = await get_random_owner(session)
-
-                geometry_wkt = generate_polygon_wkt(
+                geometry = generate_geometry(
                     target_area_ha=random.uniform(1.0, 100.0),
                     spawn_point=spawn_point,
                     spawn_radius=spawn_radius,
                 )
-                geom = functions.ST_GeomFromText(geometry_wkt)
-                session.add(
-                    Field(
-                        name=f"Поле №{field_number}",
-                        geometry=geom,
-                        area_ha=functions.ST_Area(
-                            cast(geom, Geography(srid=settings.SRID))
-                        )
-                        / 10_000,
-                        crop_id=crop.id,
-                        owner_id=owner.id,
-                    )
+
+                await uow.fields.create(
+                    name=f"Поле №{field_number}",
+                    owner_name=generate_owner_name(),
+                    crop_name=random.choice(CROPS),
+                    geometry=geometry,
                 )
                 field_number += 1
                 added_fields_count += 1
 
-            await session.commit()
+            await uow.commit()
             print(f"Added {added_fields_count} fields")
 
 
