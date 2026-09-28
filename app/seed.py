@@ -4,7 +4,7 @@ import math
 import random
 
 from faker import Faker
-from src.config.settings import settings
+from src.config.settings import get_settings
 from src.domain.value_objects.geometry import Geometry, GeometryType, Point
 from src.infrastructure.repository.sqlmodel.database import (
     get_session,
@@ -14,6 +14,7 @@ from src.infrastructure.repository.sqlmodel.unit_of_work import SqlModelUnitOfWo
 BATCH_SIZE = 500
 METERS_IN_DEGREE = 111_320.0
 
+settings = get_settings()
 
 CROPS = [
     # cereals
@@ -131,12 +132,6 @@ CROPS = [
 fake = Faker("uk_UA")
 Faker.seed(42)
 
-CROP_MAP = {}
-OWNER_MAP = {}
-
-owners_added = 0
-fields_added = 0
-
 
 def generate_owner_name() -> str:
     return f"{fake.last_name()} {fake.first_name()[0]}.{fake.middle_name()[0]}."
@@ -207,24 +202,25 @@ async def seed_fields(
         field_number = existed_field_amount + 1
         added_fields_count = 0
         for i in range(math.ceil(amount / BATCH_SIZE)):
-            for j in range(BATCH_SIZE):
-                if BATCH_SIZE * i + j >= amount:
-                    break
+            async with uow:
+                for j in range(BATCH_SIZE):
+                    if BATCH_SIZE * i + j >= amount:
+                        break
 
-                geometry = generate_geometry(
-                    target_area_ha=random.uniform(1.0, 100.0),
-                    spawn_point=spawn_point,
-                    spawn_radius=spawn_radius,
-                )
+                    geometry = generate_geometry(
+                        target_area_ha=random.uniform(1.0, 100.0),
+                        spawn_point=spawn_point,
+                        spawn_radius=spawn_radius,
+                    )
 
-                await uow.fields.create(
-                    name=f"Поле №{field_number}",
-                    owner_name=generate_owner_name(),
-                    crop_name=random.choice(CROPS),
-                    geometry=geometry,
-                )
-                field_number += 1
-                added_fields_count += 1
+                    await uow.fields.create(
+                        name=f"Поле №{field_number}",
+                        owner_name=generate_owner_name(),
+                        crop_name=random.choice(CROPS),
+                        geometry=geometry,
+                    )
+                    field_number += 1
+                    added_fields_count += 1
 
             await uow.commit()
             print(f"Added {added_fields_count} fields")

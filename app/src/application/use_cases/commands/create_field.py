@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.config.settings import settings
+from src.config.settings import Settings
 from src.domain.exceptions import (
     AreaValidationError,
     InvalidCropNameError,
@@ -22,37 +22,39 @@ class CreateFieldCommand:
 
 
 class CreateFieldHandler:
-    def __init__(self, uow: UnitOfWork):
+    def __init__(self, uow: UnitOfWork, settings: Settings) -> None:
         self.uow = uow
+        self.settings = settings
 
     async def handle(self, command: CreateFieldCommand) -> FieldIdDTO:
-        if not command.crop_name:
-            raise InvalidCropNameError("Crop name is not provided")
+        async with self.uow:
+            if not command.crop_name:
+                raise InvalidCropNameError("Crop name is not provided")
 
-        if not command.owner_name:
-            raise InvalidOwnerNameError("Owner name is not provided")
+            if not command.owner_name:
+                raise InvalidOwnerNameError("Owner name is not provided")
 
-        detailed_geometry = await self.uow.fields.get_geometry_details(
-            geometry=command.geometry,
-        )
-
-        if not detailed_geometry.is_valid:
-            raise InvalidGeometryError("Field geometry is not valid")
-
-        if detailed_geometry.area_ha <= settings.AREA_MIN_SIZE:
-            raise AreaValidationError(
-                f"Field area is too small. Should be bigger then {settings.AREA_MIN_SIZE} hectares)"
+            detailed_geometry = await self.uow.fields.get_geometry_details(
+                geometry=command.geometry,
             )
 
-        field = await self.uow.fields.create(
-            name=command.name,
-            owner_name=command.owner_name,
-            crop_name=command.crop_name,
-            geometry=command.geometry,
-        )
+            if not detailed_geometry.is_valid:
+                raise InvalidGeometryError("Field geometry is not valid")
 
-        await self.uow.commit()
+            if detailed_geometry.area_ha <= self.settings.AREA_MIN_SIZE:
+                raise AreaValidationError(
+                    f"Field area is too small. Should be bigger then {self.settings.AREA_MIN_SIZE} hectares)"
+                )
 
-        return FieldIdDTO(
-            id=str(field.id),
-        )
+            field = await self.uow.fields.create(
+                name=command.name,
+                owner_name=command.owner_name,
+                crop_name=command.crop_name,
+                geometry=command.geometry,
+            )
+
+            await self.uow.commit()
+
+            return FieldIdDTO(
+                id=str(field.id),
+            )

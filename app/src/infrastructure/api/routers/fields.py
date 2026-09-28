@@ -14,6 +14,7 @@ from src.application.use_cases.queries.get_field import GetFieldHandler
 from src.application.use_cases.queries.list_fields import ListFieldsHandler
 from src.domain.exceptions import (
     AreaValidationError,
+    FieldNotFoundError,
     InvalidCropNameError,
     InvalidGeometryError,
     InvalidOwnerNameError,
@@ -106,9 +107,10 @@ async def get_field_by_id(
     handler: Annotated[GetFieldHandler, Depends(get_get_field_handler)],
     id: UUID,
 ):
-    field = await handler.handle(str(id))
-    if not field:
-        raise HTTPException(status_code=404, detail="Field is not found")
+    try:
+        field = await handler.handle(str(id))
+    except FieldNotFoundError as e:
+        raise HTTPException(status_code=404, detail="Field is not found") from e
 
     return FieldResponse(
         id=field.id,

@@ -1,5 +1,7 @@
+from decimal import Decimal
 from enum import Enum
 
+from anyio.functools import lru_cache
 from pydantic_settings import BaseSettings
 
 
@@ -18,7 +20,9 @@ class Settings(BaseSettings):
     BASE_URL: str
 
     SRID: int = 4326
-    AREA_MIN_SIZE: float = 0.1
+    AREA_MIN_SIZE: Decimal = Decimal("0.1")
 
 
-settings = Settings()  # type: ignore
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()  # type: ignore

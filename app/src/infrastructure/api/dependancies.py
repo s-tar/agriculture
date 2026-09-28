@@ -9,13 +9,14 @@ from src.application.use_cases.queries.find_fields_by_point import (
 )
 from src.application.use_cases.queries.get_field import GetFieldHandler
 from src.application.use_cases.queries.list_fields import ListFieldsHandler
-from src.config.settings import settings
+from src.config.settings import Settings, get_settings
 from src.infrastructure.repository.sqlmodel.database import get_session
 from src.infrastructure.repository.sqlmodel.unit_of_work import SqlModelUnitOfWork
 
 
 def get_unit_of_work(
     session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> UnitOfWork:
     return SqlModelUnitOfWork(session, srid=settings.SRID)
 
@@ -40,5 +41,6 @@ def get_list_fields_handler(
 
 def get_create_field_handler(
     uow: Annotated[UnitOfWork, Depends(get_unit_of_work)],
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> CreateFieldHandler:
-    return CreateFieldHandler(uow=uow)
+    return CreateFieldHandler(uow=uow, settings=settings)
