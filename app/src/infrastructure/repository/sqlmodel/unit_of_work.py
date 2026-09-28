@@ -12,8 +12,13 @@ class SqlModelUnitOfWork(UnitOfWork):
 
     async def __aenter__(self): ...
 
-    async def __aexit__(self, *args):
-        await self.rollback()
+    async def __aexit__(self, exc_type, *args):
+        if exc_type is not None:
+            await self.rollback()
+            return False
+
+        await self.commit()
+        return True
 
     async def commit(self):
         await self.session.commit()

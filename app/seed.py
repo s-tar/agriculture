@@ -222,7 +222,6 @@ async def seed_fields(
                     field_number += 1
                     added_fields_count += 1
 
-                await uow.commit()
             print(f"Added {added_fields_count} fields")
 
 
