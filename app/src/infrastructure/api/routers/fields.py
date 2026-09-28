@@ -147,17 +147,11 @@ async def create_field(
     try:
         field = await handler.handle(command)
     except InvalidCropNameError as e:
-        raise ValidationError(
-            field_name="crop", field_value=data.crop, message=str(e)
-        ) from e
+        raise ValidationError(field_name="crop", message=str(e)) from e
     except InvalidOwnerNameError as e:
-        raise ValidationError(
-            field_name="owner", field_value=data.owner, message=str(e)
-        ) from e
+        raise ValidationError(field_name="owner", message=str(e)) from e
     except (InvalidGeometryError, AreaValidationError) as e:
-        raise ValidationError(
-            field_name="geometry", field_value=data.geometry, message=str(e)
-        ) from e
+        raise ValidationError(field_name="geometry", message=str(e)) from e
 
     return CreateFieldResponse(
         id=field.id,
