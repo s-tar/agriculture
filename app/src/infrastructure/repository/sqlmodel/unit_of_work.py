@@ -10,7 +10,8 @@ class SqlModelUnitOfWork(UnitOfWork):
         self.session = session
         self.fields = SqlModelFieldRepository(self.session, srid=srid)
 
-    async def __aenter__(self): ...
+    async def __aenter__(self):
+        return self
 
     async def __aexit__(self, exc_type, *args):
         if exc_type is not None:
