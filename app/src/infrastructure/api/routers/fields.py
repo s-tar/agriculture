@@ -109,8 +109,8 @@ async def get_field_by_id(
 ):
     try:
         field = await handler.handle(str(id))
-    except FieldNotFoundError as e:
-        raise HTTPException(status_code=404, detail="Field is not found") from e
+    except FieldNotFoundError:
+        raise HTTPException(status_code=404, detail="Field is not found")
 
     return FieldResponse(
         id=field.id,
